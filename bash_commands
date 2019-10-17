@@ -1,0 +1,45 @@
+#by Will Overton, woverton@umich.edu
+####Goal: annotate variants using whole genome sequence data from 2201 samples in HUNT ####
+
+#### Data directories ####
+
+#### Analysis overview ####
+#step 1) annotate variants using loftee
+for f in `ls /net/fantasia/home/maoxuanl/project/hunt/sequencing/2202.samples/indels.SNPs.beagle4.1.9/beagle4.1_gt/merged/chr*.PASS.post.beagle.4.1.gt.final.vcf.gz`; do base=`basename $f .PASS.post.beagle.4.1.gt.final.vcf.gz`; echo "/net/wonderland/home/isurakka/Apps/ensembl-vep/vep -i $f  --offline --plugin LoF,loftee_path:/net/wonderland/home/isurakka/.vep/Plugins/,human_ancestor_fa:/net/wonderland/home/isurakka/.vep/Plugins/human_ancestor.fa.gz,conservation_file:/net/wonderland/home/isurakka/.vep/Plugins/phylocsf_gerp.sql  -o $base.vcf --force_overwrite --cache --dir /net/wonderland/home/isurakka/.vep/ --dir_plugins /net/wonderland/home/isurakka/.vep/Plugins/"; done > submit_VEP.sh
+        #annotated variants, by chromosome, live in /net/hunt/disk2/woverton/HUNT_LOF/vep/annotatedvariants
+
+
+#step 2) parse variants using rscript filterparse.R (in /net/hunt/disk2/woverton/HUNT_LOF/vep/outs), with output chr_gene*.withfilters.vcf
+
+#step 3) filter variants so we only wind up with quality HCLOF variants
+for i in `seq 1 22`; do awk '{ if ($19 == "TRUE" && $43==0) { print } }' chr_gene$i.withfilters.vcf > chr$i.filtered.vcf; done
+mv *filtered.vcf FilteredVariants
+
+#step 4) connect sample genotype data to the variant data
+for i in `seq 1 22`; do for f in `ls /net/fantasia/home/maoxuanl/project/hunt/sequencing/2202.samples/indels.SNPs.beagle4.1.9/beagle4.1_gt/merged/chr*.PASS.post.beagle.4.1.gt.final.vcf.gz`; do bcftools query -R chr$i.filtered.vcf -f '%CHROM\t%POS\t%REF\t%ALT[\t%SAMPLE=%GT]\n' $f | python /net/snowwhite/home/bwolford/scripts/parseBCFtoolsQuery.py -f - >> chr$i.filtered_sample_genotypes.dat; done; done
+
+
+##Allele Frequency Comparisons - in /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/
+#AF Project 1) get summary data (counts of 1|1, 0|1, and 0|0) per snp, and compare to gnomad
+R
+library('data.table')
+library('tidyverse')
+df2<-fread('all_chr_variants_filtered.vcf')
+variants<-select(df2, Chr, Start, End, Allele, Gene, Feature, frameshift.ind, SG.ind, V5)%>%rename(gene_name=V5)
+distvariants<-unique(variants)%>%group_by(Chr, Start, End, Allele, Gene, gene_name)%>%summarise(frameshift=as.factor(max(frameshift.ind)),stopgain=as.factor(max(SG.ind)))
+write.table(distvariants, file='all_variants_unique_filtered.bed', sep="\t", append = FALSE, quote = FALSE,row.names = FALSE, col.names=FALSE)
+quit()
+
+for i in `seq 1 22`; do awk 'NR > 0 {print $0}' chr$i.filtered_sample_genotypes.dat >> all_chr_genotypes.filtered.dat; done
+#now run r script /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/joinscript.R to output fulldataframe, which contains count information for all variants
+
+#AF Project 2) get gnomad allele frequencies at our variant locations
+#used git clone https://github.com/willergroup/HUNT-gnomAD-Annotations.git to get a script from brad /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad
+        #ran both /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad/HUNT-gnomAD-Annotations/gnomadAnnotate.py (genomes) and /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad_exomes/HUNT-gnomAD-Annotations/gnomadAnnotate.py (exomes)
+        #NOTE: had to split chr 1 and 2 up into 3 (genomes) and 5 (exomes) subfiles, run gnomadAnnotate.py, and recombine. They're too big to run all at once.
+
+#AF Project 3)
+#run rscript /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomadjoinscript.R to join our AF info with gnomad AF info
+
+#AF Project 4)
+#made shiny app, see app.R
