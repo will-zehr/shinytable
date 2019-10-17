@@ -35,7 +35,7 @@ for i in `seq 1 22`; do awk 'NR > 0 {print $0}' chr$i.filtered_sample_genotypes.
         #NOTE: had to split chr 1 and 2 up into 3 (genomes) and 5 (exomes) subfiles, run gnomadAnnotate.py, and recombine. They're too big to run all at once.
 
 #AF Project 3)
-#run rscript /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomadjoinscript.R to join our AF info with gnomad AF info
+#run rscript gnomadjoinscript.R to join our AF info with gnomad AF info
 
 #AF Project 4)
 #made shiny app, see app.R
