@@ -1,8 +1,6 @@
 #by Will Overton, woverton@umich.edu
 ####Goal: annotate variants using whole genome sequence data from 2201 samples in HUNT ####
 
-#### Data directories ####
-
 #### Analysis overview ####
 #step 1) annotate variants using loftee
 for f in `ls /net/fantasia/home/maoxuanl/project/hunt/sequencing/2202.samples/indels.SNPs.beagle4.1.9/beagle4.1_gt/merged/chr*.PASS.post.beagle.4.1.gt.final.vcf.gz`; do base=`basename $f .PASS.post.beagle.4.1.gt.final.vcf.gz`; echo "/net/wonderland/home/isurakka/Apps/ensembl-vep/vep -i $f  --offline --plugin LoF,loftee_path:/net/wonderland/home/isurakka/.vep/Plugins/,human_ancestor_fa:/net/wonderland/home/isurakka/.vep/Plugins/human_ancestor.fa.gz,conservation_file:/net/wonderland/home/isurakka/.vep/Plugins/phylocsf_gerp.sql  -o $base.vcf --force_overwrite --cache --dir /net/wonderland/home/isurakka/.vep/ --dir_plugins /net/wonderland/home/isurakka/.vep/Plugins/"; done > submit_VEP.sh
