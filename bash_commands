@@ -3,21 +3,19 @@
 
 #### Analysis overview ####
 #step 1) annotate variants using loftee
-for f in `ls /net/fantasia/home/maoxuanl/project/hunt/sequencing/2202.samples/indels.SNPs.beagle4.1.9/beagle4.1_gt/merged/chr*.PASS.post.beagle.4.1.gt.final.vcf.gz`; do base=`basename $f .PASS.post.beagle.4.1.gt.final.vcf.gz`; echo "/net/wonderland/home/isurakka/Apps/ensembl-vep/vep -i $f  --offline --plugin LoF,loftee_path:/net/wonderland/home/isurakka/.vep/Plugins/,human_ancestor_fa:/net/wonderland/home/isurakka/.vep/Plugins/human_ancestor.fa.gz,conservation_file:/net/wonderland/home/isurakka/.vep/Plugins/phylocsf_gerp.sql  -o $base.vcf --force_overwrite --cache --dir /net/wonderland/home/isurakka/.vep/ --dir_plugins /net/wonderland/home/isurakka/.vep/Plugins/"; done > submit_VEP.sh
-        #annotated variants, by chromosome, live in /net/hunt/disk2/woverton/HUNT_LOF/vep/annotatedvariants
+for f in `ls /path/to/vcfs`; do base=`basename $f .vcf`; echo "path/to/vep -i $f  --offline --plugin LoF,loftee_path:path/to.vep/Plugins/,human_ancestor_fa:/path/to/.vep/Plugins/human_ancestor.fa.gz,conservation_file:/path/to/.vep/Plugins/phylocsf_gerp.sql  -o $base.vcf --force_overwrite --cache --dir /path/to/.vep/ --dir_plugins /path/to/.vep/Plugins/"; done > submit_VEP.sh
 
-
-#step 2) parse variants using rscript filterparse.R (in /net/hunt/disk2/woverton/HUNT_LOF/vep/outs), with output chr_gene*.withfilters.vcf
+#step 2) parse variants using rscript filterparse.R, with output chr_gene*.withfilters.vcf
 
 #step 3) filter variants so we only wind up with quality HCLOF variants
 for i in `seq 1 22`; do awk '{ if ($19 == "TRUE" && $43==0) { print } }' chr_gene$i.withfilters.vcf > chr$i.filtered.vcf; done
 mv *filtered.vcf FilteredVariants
 
-#step 4) connect sample genotype data to the variant data
-for i in `seq 1 22`; do for f in `ls /net/fantasia/home/maoxuanl/project/hunt/sequencing/2202.samples/indels.SNPs.beagle4.1.9/beagle4.1_gt/merged/chr*.PASS.post.beagle.4.1.gt.final.vcf.gz`; do bcftools query -R chr$i.filtered.vcf -f '%CHROM\t%POS\t%REF\t%ALT[\t%SAMPLE=%GT]\n' $f | python /net/snowwhite/home/bwolford/scripts/parseBCFtoolsQuery.py -f - >> chr$i.filtered_sample_genotypes.dat; done; done
+#step 4) connect sample genotype data to the variant data, using Brooke's parseBCFtoolsQuery.py script
+for i in `seq 1 22`; do for f in `ls path/to/vcfs`; do bcftools query -R chr$i.filtered.vcf -f '%CHROM\t%POS\t%REF\t%ALT[\t%SAMPLE=%GT]\n' $f | python /path/to/parseBCFtoolsQuery.py -f - >> chr$i.filtered_sample_genotypes.dat; done; done
 
 
-##Allele Frequency Comparisons - in /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/
+##Allele Frequency Comparisons
 #AF Project 1) get summary data (counts of 1|1, 0|1, and 0|0) per snp, and compare to gnomad
 R
 library('data.table')
@@ -29,11 +27,11 @@ write.table(distvariants, file='all_variants_unique_filtered.bed', sep="\t", app
 quit()
 
 for i in `seq 1 22`; do awk 'NR > 0 {print $0}' chr$i.filtered_sample_genotypes.dat >> all_chr_genotypes.filtered.dat; done
-#now run r script /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/joinscript.R to output fulldataframe, which contains count information for all variants
+#now run r script joinscript.R to output fulldataframe, which contains count information for all variants
 
 #AF Project 2) get gnomad allele frequencies at our variant locations
-#used git clone https://github.com/willergroup/HUNT-gnomAD-Annotations.git to get a script from brad /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad
-        #ran both /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad/HUNT-gnomAD-Annotations/gnomadAnnotate.py (genomes) and /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad_exomes/HUNT-gnomAD-Annotations/gnomadAnnotate.py (exomes)
+#used git clone https://github.com/willergroup/HUNT-gnomAD-Annotations.git to get gnomadAnnotate.py from Brad /net/hunt/disk2/woverton/HUNT_LOF/vep/outs/FilterProject/gnomad
+        #ran on both exomes & genomes (gnomadAnnotate.py)
         #NOTE: had to split chr 1 and 2 up into 3 (genomes) and 5 (exomes) subfiles, run gnomadAnnotate.py, and recombine. They're too big to run all at once.
 
 #AF Project 3)
