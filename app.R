@@ -58,10 +58,7 @@ server <- function(input, output) {
                                'stopgain variants'='stopgain_variants','splice DA variants'='splice_variants', 'NMD variants'='nmd_variants',
                                'n heterozygotes'='n_heterozygotes',
                                'n homozygotes'='n_homozygotes'),
-                  #extensions='Buttons',
                   options = list(
-                    #dom = 'Bfrtip',
-                    #buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
                     pageLength=100,
                   order = list(3, 'desc'),
                   lengthMenu = list(c(100, 500, 1000, -1), list('100', '500', '1000','All')),
@@ -113,7 +110,6 @@ server <- function(input, output) {
            "fin: ", round(genedf$gnomad_fin_maf,4),"</b><br>",
            "nfe: ", round(genedf$gnomad_nfe_maf,4),"</b><br>",
            "oth: ", round(genedf$gnomad_oth_maf,4)
-           #"$", format(movie$BoxOffice, big.mark = ",", scientific = FALSE)
     )
   }
   
@@ -149,9 +145,7 @@ server <- function(input, output) {
   
   vis %>% bind_shiny("plot2")
   
-  # output$plot2<-renderPlot({
-  # ggplot(totaldf%>%filter(filter %in% input$infilter),aes(variants))+geom_density()+facet_wrap(~chr)},height = 400,width = 600)
-}
+  }
   
 
 # Run the application 
