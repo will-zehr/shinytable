@@ -1,6 +1,6 @@
 Commands & R script to make a shiny table for collaborators to use in Norway. Check it out! 
 
-woverton.shinyapps.io/filtertable2/
+[woverton.shinyapps.io/filtertable2/](woverton.shinyapps.io/filtertable2/)
 
 
 # HUNT LoF Annotation
@@ -53,4 +53,4 @@ python gnomadAnnotate.py
 
 8) run rscript gnomadjoinscript.R to join our AF info with gnomad AF info
 
-And the app is ready to be made. See:
+And the app is ready to be made. See [code here](./app.R)
