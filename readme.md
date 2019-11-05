@@ -1,6 +1,6 @@
 Commands & R script to make a shiny table for collaborators to use in Norway. Check it out! 
 
-[woverton.shinyapps.io/filtertable2/](https://www.woverton.shinyapps.io/filtertable2/)
+[woverton.shinyapps.io/filtertable2/](https://woverton.shinyapps.io/filtertable2/)
 
 
 # HUNT LoF Annotation
